@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState} from "react";
 import axios from "axios";
 import { Slider, Typography, Button } from "@mui/material";
 
@@ -7,19 +7,33 @@ export default function ChatGPT() {
     const [response, setResponse] = useState("");
     const [formality, setFormality] = useState(50);
     const [tone, setTone] = useState(50);
+    const [messageHistory, setMessageHistory] = useState([]);
+    const [selectedMessage, setSelectedMessage] = useState(null);
 
     const HTTP = "http://localhost:8020/chat";
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post(`${HTTP}`, { prompt , formality, tone}).then(res => setResponse(res.data)).catch((error) => {
+        const message = {
+          prompt,
+          formality,
+          tone,
+        };
+        axios.post(`${HTTP}`, message).then((res) => {
+          setResponse(res.data);
+          setMessageHistory((prevHistory) => [...prevHistory, message]);
+        }).catch((error) => {
             console.log(error);
         });
     };
 
     const handlePrompt=(e)=> setPrompt(e.target.value);
     const handleFormality = (event,value) => setFormality(Number(value));
-  const handleTone = (event,value) => setTone(Number(value));
+    const handleTone = (event,value) => setTone(Number(value));
+    const handleClickMessage = (message) => {
+      setSelectedMessage(message);
+      setPrompt(message.prompt);
+    };
 
     return (
         <div>
@@ -59,6 +73,17 @@ export default function ChatGPT() {
             <div>
                 <p>{response ? response : "Ask me anything...."}</p>
             </div>
+            <div>
+        <h3>Message History</h3>
+        {messageHistory.map((message, index) => (
+          <p key={index} onClick={()=> handleClickMessage(message)}
+          style={{
+            cursor: "pointer",
+            textDecoration: selectedMessage ===message ? "underline": "none",
+          }}
+          >{message.prompt}</p>
+        ))}
+      </div>
         </div>
     )
 }
